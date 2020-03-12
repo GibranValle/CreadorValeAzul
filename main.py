@@ -7,9 +7,9 @@ gastos no deducibles personalizable en pdf.
 Gibran Valle
 Revisión final: 11/03/2020
 """
-from reportlab.lib.colors import magenta, pink, blue, green, black, white, red, transparent
-from reportlab.lib.units import inch, cm
+from reportlab.lib.colors import black, transparent
 from reportlab.pdfgen import canvas
+
 from constantes_variables import *
 
 
@@ -24,24 +24,28 @@ def CrearPlantillaVale(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b)
     Gibran Valle
     Revisión final: 11/03/2020
     """
-    debug = 1
     # 1) INICIAR EL CANVAS
     cvs = canvas.Canvas('plantilla_vale.pdf', bottomup=0)
     cvs.setPageSize(letter)
 
     # ELEGIR EL COLOR DE CANVAS
     cvs.setStrokeColorRGB(0.7, 0.7, 0.7)  # choose your line color
+                    
+    # CALCULAR MARGEN SUPERIOR
+    tupla = calcularMargenY(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b)
+    altura_vale_a, margen_y , margen_y_final = tupla
+    espacio_entre_vales = margen_y + altura_vale_a + SALTO_VALE + AJUSTE
 
     # CREAR LOS STRINGS
-    creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, cvs)
+    status = creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, cvs, margen_y)
 
     # CREAR LAS FORMAS DINAMICAS
-    forma(cvs, num_subvales, num_conceptos_vale_a, num_conceptos_vale_b)
+    forma(cvs, num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, margen_y, espacio_entre_vales)
 
     # FINALIZAR GUARDANDO EL DOCUMENTO, SOLO SE PUEDE GUARDAR UNA VEZ
     cvs.save()
-    if debug:
-        print("margen superior: {:.2f}".format(margen_y_calculado / cm))
+    if status:
+        print("margen superior: {:.2f}".format(margen_y / cm))
         print("margen inferior: {:.2f}".format(margen_y_final / cm))
         print("Vale creado correctamente")
 
@@ -63,14 +67,14 @@ def rectInterna(canvas, x0, x1, y0, renglones, altura_renglon, linewidth=0.5, ti
         canvas.line(x0, y0 + altura_renglon * i, x1, y0 + altura_renglon * i)
 
 
-def creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, canvas):
+def creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, canvas, margen_y):
     debug = 0
-    # COMPROBAR TOTAL DE CONCEPTOS
-    if num_conceptos_vale_a + num_conceptos_vale_b > 8:
-        print("ERROR: VALE DEMASIADO GRANDE")
-        return
+    # VALIDAR DATOS
+    status = validarDatos(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b)
+    if status == - 1:
+        return - 1
 
-        # 2) EMPEZAR A CALCULAR LA POSICION DE LOS BORDES
+    # 2) EMPEZAR A CALCULAR LA POSICION DE LOS BORDES
     for i in range(1, num_subvales + 1):
         if i == 2:
             num_conceptos = num_conceptos_vale_b
@@ -79,9 +83,9 @@ def creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, c
         else:
             num_conceptos = num_conceptos_vale_a
             if num_subvales == 1:
-                y0 = margen_y_calculado
+                y0 = margen_y
             elif num_subvales == 2:
-                y0 = margen_y_calculado
+                y0 = margen_y
             print("creando primer subvale") if debug else 0
         # BORDE 1: IMPORTE_LETRA
         x0 = margen_x
@@ -127,50 +131,49 @@ def creadorPlantilla(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, c
         canvas.line(x0 + X1, y0, x0 + X1, y0 + alto_borde)
         canvas.line(x0 + X2, y0, x0 + X2, y0 + alto_borde)
 
+    return 1
 
-def forma(canvas, num_subvales, renglonesA, renglonesB):
+
+def forma(canvas, num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, margen_y, espacio_entre_vales):
     debug = 0
+    # VALIDAR DATOS
+    status = validarDatos(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b)
+    if status == - 1:
+        return - 1
     # CREACION DE TEXTO ESTÁTICO
-    espacio_entre_vales = margen_y_calculado + altura_vale_a + SALTO_VALE + AJUSTE
-    print("espacio entre vales = {} o {}cm".format(espacio_entre_vales, espacio_entre_vales / cm)) if debug else 0
+
+
     form = canvas.acroForm
     for sub_vale in range(1, num_subvales + 1):
-        if sub_vale == 1:
-            if num_subvales == 1:
-                # offset = margen_y + margen_y_simple
-                offset = margen_y_calculado
-            elif num_subvales == 2:
-                offset = margen_y_calculado + AJUSTE
-        elif sub_vale == 2:
-            offset = espacio_entre_vales
+        offset = margen_y + AJUSTE if sub_vale == 1 else espacio_entre_vales
 
-        # posiciones fijas
-        # PRIMER RENGLON FIJO
+        # BOX 1 - FIJA
         canvas.setFont("Helvetica", SIZE_TITLE)
         xcentro = CENTRO_TITLE
-        ycentro = offset + ALTURA_RENGLON / 2
+        ycentro = offset + ALTURA_RENGLON/2
         canvas.drawCentredString(xcentro, ycentro, "Comprobante de gastos")
         xcentro = CENTRO_SYMBOL
         canvas.drawCentredString(xcentro, ycentro, "$")
         # calcular salto de renglon (fija)
         sr = ALTURA_RENGLON * 2 + ESPACIO
 
-        # SEGUNDO RENGLON FIJO
+        # BOX 2 - VARIABLE EN FUNCION DE CONCEPTOS
         xcentro = CENTRO_CONCEPTOS
         ycentro += sr
         canvas.setFont("Helvetica", SIZE_TEXT)
         canvas.drawCentredString(xcentro, ycentro, "Conceptos")
-        sr = ALTURA_RENGLON * renglonesA + 1 + ESPACIO * 2
+        # alternar entre vale 1 y vale 2
+        renglones = num_conceptos_vale_a if sub_vale == 1 else num_conceptos_vale_b
+        sr = ALTURA_RENGLON * renglones + 1 + ESPACIO * 2
 
-        # posiciones a calcular
-        # EN FUNCION DE LOS CONCEPTOS QUE HAYAN
+        # LABEL - FIJA
         ycentro += sr
         xcentro = CENTRO_LABEL
         canvas.setFont("Helvetica", SIZE_LABEL)
         canvas.drawCentredString(xcentro, ycentro, "Carguese a:")
         sr = ALTURA_RENGLON
 
-        # TEXTOS FIJOS
+        # BOX 3 - FIJA
         ycentro += sr
         canvas.setFont("Helvetica", SIZE_TEXT)
         xcentro = CENTRO_CUENTA
@@ -181,7 +184,7 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
         canvas.drawCentredString(xcentro, ycentro, "Importe")
         sr = ESPACIO + ALTURA_RENGLON * 4
 
-        # TEXTO FIJO
+        # BOX 4 - FIJA
         ycentro += sr
         xcentro = CENTRO_CUENTA
         canvas.setFont("Helvetica", SIZE_TEXT)
@@ -192,6 +195,7 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
         canvas.drawCentredString(xcentro, ycentro, "Recibido:")
 
         # ------------------------------------- FORMAS --------------------------------------------------------------
+        # PRIMER BOX
         nombre = "Importe" if sub_vale == 1 else "Importe2"
         print("offset: {}".format(offset / cm)) if debug else 0
         y0 = letter_height - ALTURA_RENGLON - offset + AJUSTE
@@ -199,7 +203,6 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
         form.textfield(name=nombre, tooltip='$100.00', x=x0, y=y0,
                        width=largo_suma_importe, borderWidth=0, height=ALTURA_RENGLON, fillColor=transparent,
                        textColor=black, forceBorder=False)
-
         nombre = "ImporteLetra" if sub_vale == 1 else "ImporteLetra2"
         y0 -= ALTURA_RENGLON
         x0 = margen_x
@@ -209,7 +212,11 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
                        forceBorder=False)
         y0 = y0 - ALTURA_RENGLON * 2 - ESPACIO
         print("posicion: {}".format(y0 / cm)) if debug else 0
-        for num_concepto in range(1, renglonesA + 1):
+
+        # SEGUNDO BOX
+        # RENGLONES DE CONCEPTOS
+        renglones = num_conceptos_vale_a if sub_vale == 1 else num_conceptos_vale_b
+        for num_concepto in range(1, renglones + 1):
             print("conceptos: {}".format(num_concepto)) if debug else 0
             # forma de conceto enesimo
             concepto = switch_concepto(num_concepto, sub_vale)
@@ -221,6 +228,7 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
             y0 -= ALTURA_RENGLON
         y0 -= ESPACIO * 2
 
+        # TERCER BOX
         for renglon in range(1, 4):
             cuenta = switch_cuenta(renglon, sub_vale)
             y = y0 - ALTURA_RENGLON * renglon
@@ -245,7 +253,7 @@ def forma(canvas, num_subvales, renglonesA, renglonesB):
                            forceBorder=False)
         y0 -= (ALTURA_RENGLON * 4 + ESPACIO)
 
-        # ultima parte
+        # CUARTO BOX
         y = y0 - ALTURA_RENGLON
         nombre = "Fecha" if sub_vale == 1 else "Fecha2"
         form.textfield(name=nombre, tooltip='', x=margen_x,
@@ -280,7 +288,13 @@ def switch_concepto(num_concepto, sub_vale):
         5: "ConceptoE" + sufijo,
         6: "ConceptoF" + sufijo,
         7: "ConceptoG" + sufijo,
-        8: "ConceptoH" + sufijo,
+        9: "ConceptoH" + sufijo,
+        10: "ConceptoI" + sufijo,
+        11: "ConceptoJ" + sufijo,
+        12: "ConceptoK" + sufijo,
+        13: "ConceptoL" + sufijo,
+        14: "ConceptoM" + sufijo,
+        15: "ConceptoN" + sufijo,
     }
     return switcher.get(num_concepto, "concepto invalido")
 
@@ -314,5 +328,18 @@ def switch_importe(num_importe, sub_vale):
     }
     return switcher.get(num_importe, "cuenta invalida")
 
+
+def validarDatos(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b):
+    # VALIDACION DE PARAMETROS
+    if num_subvales == 1 and num_conceptos_vale_a > LIMITE_CONCEPTOS_VALE_SIMPLE:
+        print("ERROR: VALE DEMASIADO GRANDE")
+        return -1
+    elif num_subvales == 2 and (num_conceptos_vale_a + num_conceptos_vale_b) > LIMITE_CONCEPTOS_VALE_DOBLE:
+        print("ERROR: VALE DEMASIADO GRANDE")
+        return -1
+    elif num_subvales > 2:
+        print("ERROR: VALE DEMASIADO GRANDE")
+        return -1
 # ----------------------------------------- PRUEBA DE BOT ---------------------------------------------
+# PROBAR EL BOT CON LAS CONSTANTES
 CrearPlantillaVale(VALES_POR_HOJA, CONCEPTOS_EN_VALE_A, CONCEPTOS_EN_VALE_B)
