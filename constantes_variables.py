@@ -1,10 +1,5 @@
-from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import letter
-
-# PARAMETROS PARA EDITAR
-VALES_POR_HOJA = 2
-CONCEPTOS_EN_VALE_A = 1
-CONCEPTOS_EN_VALE_B = 1
+from reportlab.lib.units import cm
 
 # ------------------------------------------- CONSTANTES ------------------------------------------------------------
 # tamaños de hoja carta en cm
@@ -46,9 +41,9 @@ margen_x = (letter_width - LARGO_RENGLON) / 2
 
 def calcularMargenY(vales, conceptosA, conceptosB):
     # para calcular el margen automatico
-    altura_vale_a = ESPACIO * 4 + ALTURA_RENGLON * (7 + CONCEPTOS_EN_VALE_A)
-    if VALES_POR_HOJA == 2:
-        altura_vale_b = ESPACIO * 4 + ALTURA_RENGLON * (7 + CONCEPTOS_EN_VALE_B)
+    altura_vale_a = ESPACIO * 4 + ALTURA_RENGLON * (7 + conceptosA)
+    if vales == 2:
+        altura_vale_b = ESPACIO * 4 + ALTURA_RENGLON * (7 + conceptosB)
         altura_vales = altura_vale_a + altura_vale_b + SALTO_VALE * 1.5
     else:
         altura_vale_b = 0

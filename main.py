@@ -12,6 +12,11 @@ from reportlab.pdfgen import canvas
 
 from constantes_variables import *
 
+# ------------------------ EDITAR PARA GENERAR EL VALE A TU GUSTO ------------------------------------------
+VALES_POR_HOJA = 2
+CONCEPTOS_EN_VALE_A = 1
+CONCEPTOS_EN_VALE_B = 1
+
 
 # ------------------------------- BOT PARA PROYECTO FINAL ---------------------------------------------
 def CrearPlantillaVale(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b):
