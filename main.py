@@ -13,8 +13,8 @@ from reportlab.pdfgen import canvas
 from constantes_variables import *
 
 # ------------------------ EDITAR PARA GENERAR EL VALE A TU GUSTO ------------------------------------------
-VALES_POR_HOJA = 2
-CONCEPTOS_EN_VALE_A = 1
+VALES_POR_HOJA = 1
+CONCEPTOS_EN_VALE_A = 15
 CONCEPTOS_EN_VALE_B = 1
 
 
@@ -282,6 +282,7 @@ def forma(canvas, num_subvales, num_conceptos_vale_a, num_conceptos_vale_b, marg
                        forceBorder=False)
 
 
+
 # implementación de un switch en python
 def switch_concepto(num_concepto, sub_vale):
     sufijo = "" if sub_vale == 1 else "2"
@@ -293,13 +294,14 @@ def switch_concepto(num_concepto, sub_vale):
         5: "ConceptoE" + sufijo,
         6: "ConceptoF" + sufijo,
         7: "ConceptoG" + sufijo,
-        9: "ConceptoH" + sufijo,
-        10: "ConceptoI" + sufijo,
-        11: "ConceptoJ" + sufijo,
-        12: "ConceptoK" + sufijo,
-        13: "ConceptoL" + sufijo,
-        14: "ConceptoM" + sufijo,
-        15: "ConceptoN" + sufijo,
+        8: "ConceptoH" + sufijo,
+        9: "ConceptoI" + sufijo,
+        10: "ConceptoJ" + sufijo,
+        11: "ConceptoK" + sufijo,
+        12: "ConceptoL" + sufijo,
+        13: "ConceptoM" + sufijo,
+        14: "ConceptoN" + sufijo,
+        15: "ConceptoO" + sufijo,
     }
     return switcher.get(num_concepto, "concepto invalido")
 
@@ -347,4 +349,5 @@ def validarDatos(num_subvales, num_conceptos_vale_a, num_conceptos_vale_b):
         return -1
 # ----------------------------------------- PRUEBA DE BOT ---------------------------------------------
 # PROBAR EL BOT CON LAS CONSTANTES
+
 CrearPlantillaVale(VALES_POR_HOJA, CONCEPTOS_EN_VALE_A, CONCEPTOS_EN_VALE_B)
